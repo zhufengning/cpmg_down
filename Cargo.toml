@@ -6,3 +6,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+reqwest = {version = "^0.11.4", features = ["json", "socks"]}
+tokio = { version = "^1", features = ["full"] }
+serde_json = "^1.0.67"
+aes = "^0.7.5"
+hex = "^0.4.3"
+block-modes = "^0.8.1"
+scraper = "^0.12.0"
+text_io = "^0.1.9"
