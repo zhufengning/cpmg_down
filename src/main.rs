@@ -36,10 +36,14 @@ async fn main() -> Result<(), reqwest::Error> {
                             let chapters = chapters["groups"]["default"]["chapters"]
                                 .as_array()
                                 .unwrap_or(Box::leak(vec![].into()));
-
-                            if let Err(e) = fs::create_dir(&mg_name) {
+                            let mut pt = PathBuf::new();
+                            if let Some(u) = std::env::args().nth(3) {
+                                pt = PathBuf::from(u);
+                            }
+                            pt.push(&mg_name);
+                            if let Err(e) = fs::create_dir(pt) {
                                 println!("{}", e);
-                                println!("输入y继续运行");
+                                println!("大概率是要合并文件夹输入y继续运行");
                                 let x: String;
                                 text_io::scan!("{}", x);
                                 if x != "y" {
@@ -104,13 +108,18 @@ fn unshit(shit: &str) -> String {
 }
 
 async fn down(p: i32, chapters: Vec<serde_json::Value>, name: &str) {
-    println!("第{}节开始下载", p + 1);
+    println!("第{}节开始下载", p);
     let chapters_len_len = get_len(chapters.len() as i32 + 1);
     let mut ps = mkzero(chapters_len_len - get_len(p as i32));
     ps.push_str(&p.to_string());
     let mut p_f = PathBuf::new();
+
+    if let Some(u) = std::env::args().nth(3) {
+        p_f = PathBuf::from(u);
+    }
     p_f.push(name);
     p_f.push(ps);
+    println!("{}", p_f.as_path().to_str().unwrap_or_default());
     if let Err(e) = fs::create_dir(p_f) {
         println!("{}  但可能没事儿", e);
     }
@@ -151,7 +160,7 @@ async fn down(p: i32, chapters: Vec<serde_json::Value>, name: &str) {
                         next_path.push_str(&tmp);
                         next_path.push_str(".jpg");
                         file_name.push(next_path);
-                        print!("{}下载中。。。  ", file_name.as_path().to_str().unwrap());
+                        print!("{}  ", file_name.as_path().to_str().unwrap());
                         match reqwest::Client::new()
                             .get(v["url"].as_str().unwrap_or_default())
                             .send()
