@@ -13,6 +13,7 @@ async fn main() -> Result<(), reqwest::Error> {
         Some(mg_name) => {
             match std::env::args().nth(2) {
                 Some(range) => {
+                    println!("获取目录。。");
                     let range: Vec<&str> = range.split(",").collect();
                     let url_chapters =
                         format!("https://www.copymanga.com/comicdetail/{}/chapters", mg_name);
@@ -43,7 +44,7 @@ async fn main() -> Result<(), reqwest::Error> {
                             pt.push(&mg_name);
                             if let Err(e) = fs::create_dir(pt) {
                                 println!("{}", e);
-                                println!("大概率是要合并文件夹输入y继续运行");
+                                println!("大概率是要合并文件夹或者指定的目录不存在输入y继续运行");
                                 let x: String;
                                 text_io::scan!("{}", x);
                                 if x != "y" {
@@ -66,7 +67,7 @@ async fn main() -> Result<(), reqwest::Error> {
                                         chapters.clone(),
                                         &mg_name,
                                     )
-                                    .await;
+                                        .await;
                                 }
                             }
                         }
@@ -161,27 +162,44 @@ async fn down(p: i32, chapters: Vec<serde_json::Value>, name: &str) {
                         next_path.push_str(".jpg");
                         file_name.push(next_path);
                         print!("{}  ", file_name.as_path().to_str().unwrap());
-                        match reqwest::Client::new()
-                            .get(v["url"].as_str().unwrap_or_default())
-                            .send()
-                            .await
-                        {
-                            Ok(res) => match res.bytes().await {
-                                Ok(res) => match fs::write(file_name, res) {
-                                    Ok(()) => {
-                                        println!("下载成功");
+                        let mut tm = 0;
+                        loop {
+                            if tm != 0 {
+                                println!("刚刚失败了，第{}次重试", tm);
+                            }
+                            let resp = reqwest::Client::builder()
+                                .danger_accept_invalid_certs(true).build();
+                            match resp {
+                                Ok(resp) => {
+                                    let resp = resp
+                                        .get(v["url"].as_str().unwrap_or_default())
+                                        .send().await;
+                                    match resp
+                                    {
+                                        Ok(res) => match res.bytes().await {
+                                            Ok(res) => match fs::write(&file_name, res) {
+                                                Ok(()) => {
+                                                    println!("下载成功");
+                                                    break;
+                                                }
+                                                Err(e) => {
+                                                    println!("下载失败:{}", e);
+                                                }
+                                            },
+                                            Err(e) => {
+                                                println!("下载失败:{}", e);
+                                            }
+                                        },
+                                        Err(e) => {
+                                            println!("下载失败:{:?}", e);
+                                        }
                                     }
-                                    Err(e) => {
-                                        println!("下载失败:{}", e);
-                                    }
-                                },
+                                }
                                 Err(e) => {
                                     println!("下载失败:{}", e);
                                 }
-                            },
-                            Err(e) => {
-                                println!("下载失败:{}", e);
                             }
+                            tm += 1;
                         }
                     }
                 }
