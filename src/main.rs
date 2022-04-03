@@ -16,7 +16,7 @@ async fn main() -> Result<(), reqwest::Error> {
                     println!("获取目录。。");
                     let range: Vec<&str> = range.split(",").collect();
                     let url_chapters =
-                        format!("https://www.copymanga.com/comicdetail/{}/chapters", mg_name);
+                        format!("https://www.copymanga.org/comicdetail/{}/chapters", mg_name);
                     let res_json: serde_json::Value = reqwest::Client::new()
                         .get(url_chapters)
                         .send()
@@ -127,7 +127,7 @@ async fn down(p: i32, chapters: Vec<serde_json::Value>, name: &str) {
     let p: usize = p as usize - 1;
     let chapter_id = chapters[p]["id"].as_str().unwrap_or_default();
     let url_view = format!(
-        "https://www.copymanga.com/comic/{}/chapter/{}",
+        "https://www.copymanga.org/comic/{}/chapter/{}",
         name, chapter_id
     );
     println!("获取图片列表");
